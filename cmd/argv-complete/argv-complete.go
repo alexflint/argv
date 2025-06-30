@@ -1,9 +1,10 @@
 package main
 
 import (
-	"bytes"
+	"debug/elf"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -65,29 +66,29 @@ func Main() error {
 		return fmt.Errorf("expected COMP_POINT to be positive but got %q", cursorstr)
 	}
 
-	// first find the executable
+	// find the executable
 	// note that LookPath detects explicit paths and returns it if it points to a file
 	path, err := exec.LookPath(program)
 	if err != nil {
 		return fmt.Errorf("could not find %q in path: %w", program, err)
 	}
 
-	// next dump the contents of the text segment named ".argv" using objdump
-	dump, err := exec.Command("objdump", "-sj", ".argv", path).Output()
-	if exiterr, ok := err.(*exec.ExitError); ok {
-		return fmt.Errorf("error extracting argument spec from %q: objdump said: %v", program, string(exiterr.Stderr))
-	}
+	// load as an elf binary (TODO: support other platforms)
+	f, err := elf.Open(path)
 	if err != nil {
-		return fmt.Errorf("error extracting argument spec from %q: %w", program, err)
+		return fmt.Errorf("error opening %q as ELF binary: %w", path, err)
+	}
+	defer f.Close()
+
+	// find the section
+	s := f.Section(".argv")
+	if s == nil {
+		return fmt.Errorf("argv section not found in %q", path)
 	}
 
-	// rudumentary hexdump parsing: drop first 4 lines and then take everything after column 43
-	lines := bytes.Split(dump, []byte("\n"))
-	var raw []byte
-	for _, line := range lines[4:] {
-		if len(line) >= 43 {
-			raw = append(raw, line[43:]...)
-		}
+	raw, err := io.ReadAll(s.Open())
+	if err != nil {
+		return fmt.Errorf("error reading contents of argv section in binary: %w", err)
 	}
 
 	// parse the spec
