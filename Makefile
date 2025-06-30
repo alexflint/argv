@@ -6,11 +6,7 @@ install-completions:
 build:
 	rm -f example
 	go build -o example ./cmd/example
-	go run ./cmd/argv-prepare cmd/example/arguments.json /tmp/args.json
-	objcopy \
-		--add-section .argv=/tmp/args.json \
-		--set-section-flags .argv=noload,readonly \
-		example example
+	go run ./cmd/argv-embed example cmd/example/arguments.json
 
 read:
 	objdump -sj .argv example | tail -n +5 | xxd -r

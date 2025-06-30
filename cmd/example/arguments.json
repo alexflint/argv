@@ -6,7 +6,7 @@
 			"positional": true,
 			"cardinality": "one"
 		},{
-			"placeholder": "IDS",
+			"placeholder": "VERBOSE",
 			"long": "--verbose",
 			"cardinality": "zero"
 		},{
