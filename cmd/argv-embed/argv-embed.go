@@ -10,6 +10,7 @@ import (
 	"os/exec"
 
 	"github.com/alexflint/go-arg"
+	"github.com/goccy/go-yaml"
 	"go.wit.com/apps/argv"
 )
 
@@ -26,14 +27,14 @@ func Main() error {
 	// read input
 	buf, err := os.ReadFile(args.Spec)
 	if err != nil {
-		return fmt.Errorf("error reading input: %w", err)
+		return fmt.Errorf("error opening spec: %w", err)
 	}
 
 	// parse the json
 	var spec argv.Command
-	err = json.Unmarshal(buf, &spec)
+	err = yaml.Unmarshal(buf, &spec)
 	if err != nil {
-		return fmt.Errorf("error unmarshaling command: %w", err)
+		return fmt.Errorf("error parsing spec: %w", err)
 	}
 
 	// TODO: validate
@@ -44,6 +45,7 @@ func Main() error {
 		return fmt.Errorf("error creating temporary file: %w", err)
 	}
 	defer f.Close()
+	defer os.Remove(f.Name())
 
 	// write the base64-encoded json
 	//w := base64.NewEncoder(base64.StdEncoding, f)

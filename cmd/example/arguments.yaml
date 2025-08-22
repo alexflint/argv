@@ -1,0 +1,14 @@
+name: example
+arguments:
+
+- placeholder: PATH
+  positional: true
+  cardinality: one
+
+- long: --verbose
+  placeholder: VERBOSE
+  cardinality: zero
+
+- long: --ids
+  placeholder: IDS
+  cardinality: multiple
